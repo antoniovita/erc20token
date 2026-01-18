@@ -2,62 +2,97 @@
 pragma solidity ^0.8.20;
 
 error InvalidAddress();
-error InvalidValue();
+error InsufficientBalance();
+error InsufficientAllowance();
 
-contract SimpleToken { 
-       string immutable public name;
-       string immutable public symbol;
-       uint8 immutable public decimals;
-       uint256 public totalSupply;
-       mapping(address => uint256) balances;
-       mapping(address => mapping (address => uint256)) allowances;
+contract SimpleToken {
+    string public name;
+    string public symbol;
+    uint8 public immutable decimals;
 
-       constructor(string memory _name, string memory _symbol, uint8 _decimals, uint256 _totalSupply) {
-              name = _name;
-              symbol = _symbol;
-              decimals = _decimals;
-              totalSupply = _totalSupply;
-              balances[msg.sender] = _totalSupply;
-       }
+    uint256 public totalSupply;
+
+    mapping(address => uint256) private balances;
+    mapping(address => mapping(address => uint256)) private allowances;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint8 _decimals,
+        uint256 _totalSupply
+    ) {
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
+
+        _mint(msg.sender, _totalSupply);
+    }
+
+    function balanceOf(address account) public view returns (uint256) {
+        return balances[account];
+    }
+
+    function allowance(address owner, address spender) public view returns (uint256) {
+        return allowances[owner][spender];
+    }
+
+    function transfer(address to, uint256 value) external returns (bool) {
+        _transfer(msg.sender, to, value);
+        return true;
+    }
+
+    function approve(address spender, uint256 value) external returns (bool) {
+        _approve(msg.sender, spender, value);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 value) external returns (bool) {
+        uint256 currentAllowance = allowances[from][msg.sender];
+
+        if (currentAllowance < value) revert InsufficientAllowance();
+
+        if (currentAllowance != type(uint256).max) {
+            unchecked {
+                allowances[from][msg.sender] = currentAllowance - value;
+            }
+            emit Approval(from, msg.sender, allowances[from][msg.sender]);
+        }
+
+        _transfer(from, to, value);
+        return true;
+    }
 
 
-       event Transfer(address indexed from, address indexed to, uint256 value);
-       event Approval(address indexed owner, address indexed spender, uint256 value);
+    function _transfer(address from, address to, uint256 value) internal {
+        if (to == address(0) || from == address(0)) revert InvalidAddress();
 
-       modifier validateAddress(address a) {
-              if (a == address(0)) {revert InvalidAddress();}
-              _;
-       }
+        uint256 fromBal = balances[from];
+        if (fromBal < value) revert InsufficientBalance();
 
-       modifier validateValue(uint256 value) {
-              if (value > balanceOf(msg.sender)) {revert InvalidValue();}
-              _;
-       }
+        unchecked {
+            balances[from] = fromBal - value;
+            balances[to] += value;
+        }
 
-       function balanceOf(address account) public view validateAddress(account) returns (uint256) {
-              return balances[account];
-       }
+        emit Transfer(from, to, value);
+    }
 
-       function allowance(address owner, address spender) public view validateAddress(owner) validateAddress(spender) returns (uint256) {
-              return allowances[owner][spender];
-       }
+    function _approve(address owner, address spender, uint256 value) internal {
+        if (owner == address(0) || spender == address(0)) revert InvalidAddress();
 
-       function transfer (address to, uint256 value) public validateAddress(to) validateValue(value) returns (bool) {
-              balances[to] += value;
-              balances[msg.sender] -= value;
+        allowances[owner][spender] = value;
+        emit Approval(owner, spender, value);
+    }
 
-              emit Transfer(msg.sender, to, value);
-              return true;
-       }
+    function _mint(address to, uint256 value) internal {
+        if (to == address(0)) revert InvalidAddress();
 
-       function approve (address spender, uint256 value) public validateAddress(spender) returns (bool) {
-              allowances[msg.sender][spender] = value;
-              emit Approval(msg.sender, spender, value);
-              return true;
-       }
+        totalSupply += value;
+        balances[to] += value;
 
-       function transferFrom(address from, address to, uint256 value) public validateAddress(from) validateAddress(to) returns (bool) {
-
-       }
-
+        emit Transfer(address(0), to, value);
+    }
 }
