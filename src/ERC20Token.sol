@@ -5,7 +5,7 @@ error InvalidAddress();
 error InsufficientBalance();
 error InsufficientAllowance();
 
-contract SimpleToken {
+contract ERC20Token {
     string public name;
     string public symbol;
     uint8 public immutable decimals;
