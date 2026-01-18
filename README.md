@@ -1,66 +1,42 @@
-## Foundry
+# SimpleToken (ERC20-style)
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+A minimal ERC20-style token implementation built with Foundry. This project is a learning-focused smart contract that covers the core ERC20 behaviors: balances, allowances, transfers, approvals, and transferFrom.
 
-Foundry consists of:
+## What it includes
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- `SimpleToken` contract with:
+  - immutable token metadata (`name`, `symbol`, `decimals`)
+  - `totalSupply` tracked on deploy
+  - balance tracking via `balances`
+  - allowance tracking via `allowances`
+  - `transfer`, `approve`, and `transferFrom` flows
+  - custom errors for invalid address/value
 
-## Documentation
+## Contract overview
 
-https://book.getfoundry.sh/
+- **Metadata**: `name`, `symbol`, `decimals`
+- **Supply**: `totalSupply` set in constructor
+- **Balances**: `balanceOf(address)` getter
+- **Allowances**: `allowance(owner, spender)` getter
+- **Transfers**: `transfer(to, value)` and `transferFrom(from, to, value)`
+- **Events**: `Transfer`, `Approval`
 
-## Usage
+## Quick start (Foundry)
 
 ### Build
 
 ```shell
-$ forge build
+forge build
 ```
 
 ### Test
 
 ```shell
-$ forge test
+forge test
 ```
 
 ### Format
 
 ```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+forge fmt
 ```
